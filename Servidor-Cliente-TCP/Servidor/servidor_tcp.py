@@ -1,56 +1,68 @@
 import socket
-import sys
 import selectors
-import types
+import sys
+import signal
 
-sel = selectors.DefaultSelector()
+try:
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind((sys.argv[1], int(sys.argv[2])))
 
-# ...
+    server_socket.listen()
+    print(f'Server ready and listening on {sys.argv[1]}:{sys.argv[2]}')
 
-host, port = sys.argv[1], int(sys.argv[2])
-lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-lsock.bind((host, port))
-lsock.listen()
-print(f"Listening on {(host, port)}")
-lsock.setblocking(False)
-sel.register(lsock, selectors.EVENT_READ, data=None)
+except socket.error as e:
+    print(f'Error creating socket: {e}')
+    sys.exit(1)
 
-def accept_wrapper(sock):
-    conn, addr = sock.accept()  # Should be ready to read
-    print(f"Accepted connection from {addr}")
+
+selector = selectors.DefaultSelector()
+
+def accept(sock, mask):
+
+    conn, addr = sock.accept()
     conn.setblocking(False)
-    data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
-    events = selectors.EVENT_READ | selectors.EVENT_WRITE
-    sel.register(conn, events, data=data)
+    print(f'Accepted connection from {addr}')
 
-def service_connection(key, mask):
-    sock = key.fileobj
-    data = key.data
-    if mask & selectors.EVENT_READ:
-        recv_data = sock.recv(1024)  # Should be ready to read
-        if recv_data:
-            data.outb += recv_data
-        else:
-            print(f"Closing connection to {data.addr}")
-            sel.unregister(sock)
-            sock.close()
-    if mask & selectors.EVENT_WRITE:
-        if data.outb:
-            print(f"Echoing {data.outb!r} to {data.addr}")
-            sent = sock.send(data.outb)  # Should be ready to write
-            data.outb = data.outb[sent:]
+    selector.register(conn, selectors.EVENT_READ, data=None)
+
+def read(conn, mask):
+
+    with open('file_received.txt', 'wb') as f:
+        data = conn.recv(1024)
+        while data:
+            f.write(data)
+            data = conn.recv(1024)
+    print(f'File received from {conn.getpeername()}')
+    selector.unregister(conn)
+    conn.close()
+
+selector.register(server_socket, selectors.EVENT_READ, data=None)
+
+def handle_sigint(signum, frame):
+    print('Server closed')
+    server_socket.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, handle_sigint)
 
 try:
     while True:
-        events = sel.select(timeout=None)
+        
+        events = selector.select(timeout=1)
+
         for key, mask in events:
-            if key.data is None:
-                accept_wrapper(key.fileobj)
+
+            conn = key.fileobj
+
+            if conn == server_socket:
+                accept(conn, mask)
             else:
-                service_connection(key, mask)
+                read(conn, mask)
+        
+        if not selector.get_map():
+            break
+
 except KeyboardInterrupt:
-    print("Caught keyboard interrupt, exiting")
-finally:
-    sel.close()
+    handle_sigint(signal.SIGINT, None)
 
 
