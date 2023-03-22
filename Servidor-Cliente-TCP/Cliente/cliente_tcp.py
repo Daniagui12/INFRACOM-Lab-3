@@ -1,75 +1,57 @@
 import socket
 import selectors
-import types
 import sys
 
+def create_client_socket(server_address, server_port):
 
-sel = selectors.DefaultSelector()
-messages = [b"Message 1 from client.", b"Message 2 from client."]
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def start_connections(host, port, num_conns):
-    server_addr = (host, port)
-    for i in range(0, num_conns):
-        connid = i + 1
-        print(f"Starting connection {connid} to {server_addr}")
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setblocking(False)
-        sock.connect_ex(server_addr)
-        events = selectors.EVENT_READ | selectors.EVENT_WRITE
-        data = types.SimpleNamespace(
-            connid=connid,
-            msg_total=sum(len(m) for m in messages),
-            recv_total=0,
-            messages=messages.copy(),
-            outb=b"",
-        )
-        sel.register(sock, events, data=data)
+    client_socket.connect((server_address, server_port))
 
-def service_connection(key, mask):
-    sock = key.fileobj
-    data = key.data
-    if mask & selectors.EVENT_READ:
-        recv_data = sock.recv(1024)  # Should be ready to read
-        if recv_data:
-            print(f"Received {repr(recv_data)} from connection {data.connid}")
-            data.recv_total += len(recv_data)
-        if not recv_data or data.recv_total == data.msg_total:
-            print(f"Closing connection {data.connid}")
-            sel.unregister(sock)
-            sock.close()
-    if mask & selectors.EVENT_WRITE:
-        if data.messages:
-            next_msg = data.messages.pop(0)
-            print(f"Sending {repr(next_msg)} to connection {data.connid}")
-            sock.send(next_msg)  # Should be ready to write
-        else:
-            print(f"Closing connection {data.connid}")
-            sel.unregister(sock)
-            sock.close()
+    return client_socket
 
-def stop_client():
-    sel.close()
-    print("ClientTCP stopped")
 
-if len(sys.argv) != 4:
-    print("usage:", sys.argv[0], "<host> <port> <num_connections>")
-    sys.exit(1)
+def read(client_socket, mask):
 
-host, port, num_conns = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+    message = client_socket.recv(1024)
+    if message:
+        print(f'Received: {message.decode()}')
+    else:
+        print(f'Connection closed by server')
+        selector.unregister(client_socket)
+        client_socket.close()
 
-start_connections(host, port, num_conns)
+def write(client_socket, mask):
 
-try:
-    while True:
-        events = sel.select(timeout=1)
-        if events:
-            for key, mask in events:
-                service_connection(key, mask)
-        # Check for a socket being monitored to continue.
-        if not sel.get_map():
-            break
+    with open('file.txt', 'rb') as f:
+        data = f.read(1024)
+        while data:
+            client_socket.send(data)
+            data = f.read(1024)
+    print('File sent to server')
+    selector.unregister(client_socket)
+    client_socket.close()
+
+selector = selectors.DefaultSelector()
+
+n = int(sys.argv[3])
+for i in range(n):
+    client_socket = create_client_socket(sys.argv[1], int(sys.argv[2]))
+    selector.register(client_socket, selectors.EVENT_WRITE, data=None)
+
+while True:
+    # Wait for events on the registered sockets
+    events = selector.select()
+
+    for key, mask in events:
+
+        if mask & selectors.EVENT_READ:
+            read(key.fileobj, mask)
+        if mask & selectors.EVENT_WRITE:
+            write(key.fileobj, mask)
     
-    stop_client()
+    if len(selector.get_map()) == 0:
+        break
 
-except KeyboardInterrupt:
-    stop_client()
+for key, mask in selector.get_map().items():
+    key.fileobj.close()
