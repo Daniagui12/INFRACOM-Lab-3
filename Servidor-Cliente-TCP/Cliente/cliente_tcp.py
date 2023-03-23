@@ -1,57 +1,93 @@
 import socket
 import selectors
-import sys
+import os
+import hashlib
+import datetime
 
-def create_client_socket(server_address, server_port):
+class MySocket(socket.socket):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.data = None
 
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+class ClientTCP:
 
-    client_socket.connect((server_address, server_port))
+    def __init__(self, server_address, server_port, num_clients):
+        self.selector = selectors.DefaultSelector()
+        self.num_clients = num_clients
+        self.clients = []
+        for i in range(num_clients):
+            client_socket = self.create_client_socket(server_address, server_port)
+            self.selector.register(client_socket, selectors.EVENT_WRITE | selectors.EVENT_READ, data=i)
+            client_socket.data = i
+            self.clients.append(client_socket)
+        self.log_filename = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt"
+        os.makedirs("ArchivosRecibidos", exist_ok=True)
+        os.makedirs("Logs", exist_ok=True)
 
-    return client_socket
+    def create_client_socket(self, server_address, server_port):
+        client_socket = MySocket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((server_address, server_port))
+        return client_socket
 
+    def read(self, client_socket, mask):
+        client_id = client_socket.data
+        file_hash = client_socket.recv(1024).decode()
+        print(f'Hash received from server for client {client_id}: {file_hash}')
 
-def read(client_socket, mask):
+        with open(f"ArchivosRecibidos/Cliente{client_id+1}-Prueba-{self.num_clients}.txt", 'wb') as f:
+            start_time = datetime.datetime.now()
+            while True:
+                data = client_socket.recv(1024)
+                print(f"Received {len(data)} bytes from server for client {client_id}.")
+                if not data:
+                    break
+                f.write(data)
+            end_time = datetime.datetime.now()
+            time_diff = end_time - start_time
+            file_size = os.path.getsize(f.name)
+            print(f"Received {file_size} bytes from server for client {client_id} in {time_diff.total_seconds()} seconds.")
+            hash_obj = hashlib.sha256()
+            with open(f.name, 'rb') as f:
+                while True:
+                    data = f.read(1024)
+                    if not data:
+                        break
+                    hash_obj.update(data)
+                calculated_hash = hash_obj.hexdigest()
+                if calculated_hash == file_hash:
+                    print(f"Hash of received file matches the hash received from server for client {client_id}.")
+                    status = "SUCCESS"
+                else:
+                    print(f"Hash of received file does not match the hash received from server for client {client_id}.")
+                    status = "FAILED"
+                with open(f"Logs/{self.log_filename}", 'a') as log_file:
+                    log_file.write(f"Client {client_id+1}: file=Cliente{client_id+1}-Prueba-{self.num_clients}.txt, size={file_size}, status={status}, time={time_diff.total_seconds()} seconds\n")
 
-    message = client_socket.recv(1024)
-    if message:
-        print(f'Received: {message.decode()}')
-    else:
-        print(f'Connection closed by server')
-        selector.unregister(client_socket)
-        client_socket.close()
+    def write(self, client_socket, mask):
+        client_id = client_socket.data
+        client_socket.send(b'Ready to receive file.')
 
-def write(client_socket, mask):
+    def run(self):
+        for i in range(self.num_clients):
+            self.write(self.clients[i], None)
 
-    with open('file.txt', 'rb') as f:
-        data = f.read(1024)
-        while data:
-            client_socket.send(data)
-            data = f.read(1024)
-    print('File sent to server')
-    selector.unregister(client_socket)
-    client_socket.close()
+        while True:
+            events = self.selector.select()
+            if not events:
+                break
+            for key, mask in events:
+                if mask & selectors.EVENT_READ:
+                    self.read(key.fileobj, mask)
+                if mask & selectors.EVENT_WRITE:
+                    self.write(key.fileobj, mask)
 
-selector = selectors.DefaultSelector()
+        for key, mask in self.selector.get_map().items():
+            key.fileobj.close()
 
-n = int(sys.argv[3])
-for i in range(n):
-    client_socket = create_client_socket(sys.argv[1], int(sys.argv[2]))
-    selector.register(client_socket, selectors.EVENT_WRITE, data=None)
+if __name__ == '__main__':
+    server_address = "127.0.0.1"
+    server_port = 65432
+    num_clients = 2
 
-while True:
-    # Wait for events on the registered sockets
-    events = selector.select()
-
-    for key, mask in events:
-
-        if mask & selectors.EVENT_READ:
-            read(key.fileobj, mask)
-        if mask & selectors.EVENT_WRITE:
-            write(key.fileobj, mask)
-    
-    if len(selector.get_map()) == 0:
-        break
-
-for key, mask in selector.get_map().items():
-    key.fileobj.close()
+    client = ClientTCP(server_address, server_port, num_clients)
+    client.run()
