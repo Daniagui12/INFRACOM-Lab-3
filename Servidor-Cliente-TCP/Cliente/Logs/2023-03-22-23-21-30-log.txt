@@ -1,1 +1,0 @@
-Client 1: file=Cliente1-Prueba-2.txt, size=0, status=FAILED, time=78.828536 seconds

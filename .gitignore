@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 *.zip
 *.bin
+*.txt
+*.txt
+Servidor-Cliente-TCP/Cliente/ArchivosRecibidos/Cliente1-Prueba-2.txt
+*.txt

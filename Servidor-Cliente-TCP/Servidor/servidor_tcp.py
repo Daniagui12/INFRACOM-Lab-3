@@ -57,6 +57,9 @@ class FileServer:
         # send hash value to client
         conn.send(self.file_hash.encode())
 
+        # send file size to client
+        conn.send(str(self.file_size).encode())
+
         # register client socket for read events
         self.selector.register(conn, selectors.EVENT_READ, data={'file_name': self.file_name})
 
@@ -64,14 +67,21 @@ class FileServer:
         self.clients[conn] = {'addr': addr, 'file_name': self.file_name, 'ready': False}
 
         # check if all clients are ready to receive file
-        if len(self.clients) == self.max_clients and all(self.clients[c].get('ready', False) for c in self.clients):
+        if len(self.clients) == self.max_clients and all(self.clients[c].get('ready', True) for c in self.clients):
             self.send_file()
 
     def read(self, conn, mask):
         data = conn.recv(1024)
         if data:
-            print(f'Received {data} from {conn.getpeername()}')
+            print(data.decode() + "\n")
+            if data == b'Ready':
+                self.clients[conn]['ready'] = True
+
+                # check if all clients are ready to receive file
+                if len(self.clients) == self.max_clients and all(self.clients[c].get('ready', True) for c in self.clients):
+                    self.send_file()
         else:
+            print(conn)
             print(f'Closing connection to {conn.getpeername()}')
             self.selector.unregister(conn)
             conn.close()
@@ -80,29 +90,25 @@ class FileServer:
             # remove client from list of clients
             del self.clients[conn]
 
-        # check if all clients are ready to receive file
-        if len(self.clients) == self.max_clients and all(self.clients[c].get('ready', False) for c in self.clients):
-            self.send_file()
-
     def write(self, conn, mask):
-        # client is ready to receive file
-        self.clients[conn]['ready'] = True
 
         # check if all clients are ready to receive file
-        if len(self.clients) == self.max_clients and all(self.clients[c].get('ready', False) for c in self.clients):
+        if len(self.clients) == self.max_clients and all(self.clients[c].get('ready', True) for c in self.clients):
             self.send_file()
 
     def send_file(self):
         # send file to clients
         with open(self.file_name, 'rb') as f:
             for c in self.clients:
-                c.send(f.read(self.file_size))
+                portion = f.read(self.file_size)
+                c.send(portion)
             
         # close all connections
         for c in self.clients:
+            self.logger.info(f'Connection closed to {c.getpeername()}')
             self.selector.unregister(c)
             c.close()
-            self.logger.info(f'Connection closed to {c.getpeername()}')
+            
     
         # clear list of clients
         self.clients.clear()
