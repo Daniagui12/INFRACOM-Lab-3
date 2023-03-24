@@ -1,15 +1,11 @@
 from socket import SO_REUSEADDR, SOCK_STREAM, error, socket, SOL_SOCKET, AF_INET
-import selectors
-import types
 import logging
 import hashlib
-import os
 import datetime
-import time
 from threading import Thread
 from queue import Queue
 
-num_clients = 2
+num_clients = 25
 
 class ClientThread:
     def __init__(self, id, address, port, log_filename):
@@ -24,7 +20,7 @@ class ClientThread:
         global num_clients
         try:
             # Timeout if the no connection can be made in 5 seconds
-            self.s.settimeout(5)
+            self.s.settimeout(15)
             # Allow socket address reuse
             self.s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
             # Connect to the ip over the given port
@@ -45,6 +41,7 @@ class ClientThread:
             self.receive_file(file_size, file_hash, num_clients)
             
             self.s.close()
+            
         except error as e:
             print(e)
             raise(e)
@@ -54,7 +51,9 @@ class ClientThread:
         
         client_id = self.id
 
-        with open(f"ArchivosRecibidos/Cliente{client_id+1}-Prueba-{num_clients}.txt", 'wb') as f:
+        file_name = f"ArchivosRecibidos/Cliente{client_id+1}-Prueba-{num_clients}.txt"
+
+        with open(file_name, 'wb') as f:
             start_time = datetime.datetime.now()
             remaining_bytes = file_size
             while remaining_bytes > 0:
@@ -67,22 +66,18 @@ class ClientThread:
             time_diff = end_time - start_time
             print(f"Received {file_size} bytes from server for client {client_id} in {time_diff.total_seconds()} seconds.")
 
-            hash_obj = hashlib.sha256()
-            with open(f.name, 'rb') as f:
-                while True:
-                    data = f.read(1024)
-                    if not data:
-                        break
-                    hash_obj.update(data)
-            calculated_hash = hash_obj.hexdigest()
-            if calculated_hash == file_hash:
-                print(f"Hash of received file matches the hash received from server for client {client_id}.")
-                status = "SUCCESS"
-            else:
-                print(f"Hash of received file does not match the hash received from server for client {client_id}.")
-                status = "FAILED"
-            with open(f"Logs/{self.log_filename}", 'a') as log_file:
-                log_file.write(f"Client {client_id+1}: file=Cliente{client_id+1}-Prueba-{num_clients}.txt, size={file_size}, status={status}, time={time_diff.total_seconds()} seconds\n")
+        # Calculate the hash of the received file
+        calculated_hash = hashlib.md5(open(file_name, 'rb').read()).hexdigest()
+        print(f"Hash of received file for client {client_id}: {calculated_hash}")
+
+        if calculated_hash == file_hash:
+            print(f"Hash of received file matches the hash received from server for client {client_id}.")
+            status = "SUCCESS"
+        else:
+            print(f"Hash of received file does not match the hash received from server for client {client_id}.")
+            status = "FAILED"
+        with open(f"Logs/{self.log_filename}", 'a') as log_file:
+            log_file.write(f"Client {client_id+1}: file=Cliente{client_id+1}-Prueba-{num_clients}.txt, size={file_size}, status={status}, time={time_diff.total_seconds()} seconds\n")
 
 
 # Create a queue to hold the tasks for the worker threads
@@ -107,11 +102,11 @@ def worker():
 
 # Populate the work queue with a list of numbers as long as the total number of requests wished to be sent.
 # These queue items can be thought of as decrementing counters for the client thread workers.
-for item in range(2):
+for item in range(num_clients):
     q.put(item)
 
 # Create a number of threads, given by the maxWorkerThread variable, to initiate clients and begin sending requests.
-for i in range(2):
+for i in range(num_clients):
     t = Thread(target=worker)
     t.daemon = True
     t.start()

@@ -3,9 +3,8 @@ import logging
 import hashlib
 import os
 import datetime
-import sys
 from threading import Thread, Lock
-from queue import Queue
+import time
 
 thread_lock = Lock()
 
@@ -16,6 +15,17 @@ s.bind(('127.0.0.1', 65432))
 
 # Create a list in which threads will be stored in order to be joined later
 threads = []
+
+def init_logger():
+    log_dir = 'Servidor-Cliente-TCP/Servidor/Logs'
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)
+
+    log_filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S') + '-log.txt'
+    logging.basicConfig(filename=f'Servidor-Cliente-TCP/Servidor/Logs/{log_filename}', level=logging.INFO)
+    return logging.getLogger()
+
+logger = init_logger()
 
 class RequestHandler(Thread):
     def __init__(self, msg, addr, port, s, lock, file_num):
@@ -30,21 +40,25 @@ class RequestHandler(Thread):
         # Define the actions the thread will execute when called.
     def run(self):
 
+        global logger
         # Get the message from the client
         print(f"Message received from client {self.addr}: {self.msg}")
+        logger.info(f"Message received from client {self.addr}: {self.msg}")
 
         # if message from client is "Ready", send the file
         if self.msg == "Ready":
-            self.send_file()
+            self.send_file(logger)
+            logger.info(f"File sent to client {self.addr}")
         
         else:
             print("Message not recognized")
+            logger.info(f"Message not recognized from client {self.addr}")
         
         # Close the connection
         self.s.close()
 
 
-    def send_file(self):
+    def send_file(self, logger):
         
         if self.file_num == 1:
             file_name = "files/100MB.bin"
@@ -72,6 +86,8 @@ class RequestHandler(Thread):
                 remaining_bytes -= 1024
             end_time = datetime.datetime.now()
             print(f"File sent to client {self.addr} in {end_time - start_time}")
+            # Log the time it took to send the file and size of the file and client address
+            logger.info(f"File sent to client {self.addr} in {end_time - start_time} with size {file_size}")
 
 
 file_num = int(input("Enter the file number to send (1 for 100MB or 2 for 250MB): "))
