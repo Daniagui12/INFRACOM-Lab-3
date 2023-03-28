@@ -98,7 +98,7 @@ def worker():
     while True:
         try:
             item = q.get()
-            client = ClientThread(item, "192.168.1.29", 65432, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt", file_num)
+            client = ClientThread(item, "192.168.1.29", 5000, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt", file_num)
             client.run()
         except Exception as e:
             logging.exception(f"Exception in worker: {e}")
