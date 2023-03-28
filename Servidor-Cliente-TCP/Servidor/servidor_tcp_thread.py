@@ -28,14 +28,14 @@ def init_logger():
 logger = init_logger()
 
 class RequestHandler(Thread):
-    def __init__(self, msg, addr, port, s, lock, file_num):
+    def __init__(self, addr, port, s, lock):
         Thread.__init__(self)
         self.port = port
         self.addr = addr
         self.s = s
         self.lock = lock
-        self.msg = msg
-        self.file_num = file_num
+        self.file_num = 0
+        self.msg = ""
 
         # Define the actions the thread will execute when called.
     def run(self):
@@ -45,14 +45,23 @@ class RequestHandler(Thread):
         print(f"Message received from client {self.addr}: {self.msg}")
         logger.info(f"Message received from client {self.addr}: {self.msg}")
 
-        # if message from client is "Ready", send the file
+        file_name_msg = int(self.s.recv(1024).decode())
+
+        if file_name_msg == 1:
+            self.file_num = 1
+        
+        elif file_name_msg == 2:
+            self.file_num = 2
+        
+        self.s.send("ok".encode())
+        
+        self.msg = self.s.recv(1024).decode()
+
         if self.msg == "Ready":
             self.send_file(logger)
-            logger.info(f"File sent to client {self.addr}")
-        
-        else:
+        else: 
             print("Message not recognized")
-            logger.info(f"Message not recognized from client {self.addr}")
+
         
         # Close the connection
         self.s.close()
@@ -90,7 +99,6 @@ class RequestHandler(Thread):
             logger.info(f"File sent to client {self.addr} in {end_time - start_time} with size {file_size}")
 
 
-file_num = int(input("Enter the file number to send (1 for 100MB or 2 for 250MB): "))
 print("Starting server")
 # Continuously listen for a client request and spawn a new thread to handle every request
 while True:
@@ -99,15 +107,12 @@ while True:
 
         print("Waiting for a client request")
         # Listen for a request
-        s.listen(1)
+        s.listen()
         # Accept the request
         sock, addr = s.accept()
 
-        # Receive the message from the client
-        response_message = sock.recv(1024).decode()
-
         # Spawn a new thread for the given request
-        newThread = RequestHandler(response_message, addr[0], addr[1], sock, thread_lock, file_num)
+        newThread = RequestHandler(addr[0], addr[1], sock, thread_lock)
         newThread.start()
         threads.append(newThread)
 
