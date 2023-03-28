@@ -2,6 +2,7 @@ from socket import SO_REUSEADDR, SOCK_STREAM, error, socket, SOL_SOCKET, AF_INET
 import logging
 import hashlib
 import datetime
+import struct
 from threading import Thread
 from queue import Queue
 
@@ -39,7 +40,8 @@ class ClientThread:
                 print(f'Hash received from server for client {self.id}: {file_hash}')
 
                 # Receive the file size
-                file_size = int(self.s.recv(1024).decode())
+                data = self.s.recv(8)
+                file_size = struct.unpack("!Q", data)[0]
                 print(f"File size received from server for client {self.id}: {file_size} bytes")
 
                 self.receive_file(file_size, file_hash, num_clients)

@@ -3,6 +3,7 @@ import logging
 import hashlib
 import os
 import datetime
+import struct
 from threading import Thread, Lock
 import time
 
@@ -83,7 +84,7 @@ class RequestHandler(Thread):
         # Send the file size
         file_size = os.path.getsize(file_name)
         print(f"Sending file size to client {file_size}")
-        self.s.send(str(file_size).encode())
+        self.s.send(struct.pack("!Q", file_size))
 
         # Send the file
         with open(file_name, 'rb') as f:
