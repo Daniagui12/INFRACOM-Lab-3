@@ -82,6 +82,7 @@ class RequestHandler(Thread):
 
         # Send the file size
         file_size = os.path.getsize(file_name)
+        print(f"Sending file size to client {file_size}")
         self.s.send(str(file_size).encode())
 
         # Send the file
