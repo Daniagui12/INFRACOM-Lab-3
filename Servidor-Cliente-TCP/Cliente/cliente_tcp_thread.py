@@ -5,8 +5,6 @@ import datetime
 from threading import Thread
 from queue import Queue
 
-num_clients = 25
-
 class ClientThread:
     def __init__(self, id, address, port, log_filename, file_number):
         self.id = id
@@ -92,6 +90,8 @@ class ClientThread:
 # Create a queue to hold the tasks for the worker threads
 q = Queue(maxsize=0)
 
+print("--Client app started--")
+num_clients = int(input("Enter the number of clients to request to the server (MAX = 25): "))
 file_num = input("Enter the file number to send (1 for 100MB or 2 for 250MB): ")
 # Function which generates a Client instance, getting the work item to be processed from the queue
 def worker():
