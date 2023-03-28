@@ -2,11 +2,12 @@ import os
 import socket 
 import datetime
 import threading
+
 #Tamaño maximo de bytes de paquetes UDP
 bufferSize = 65535
 
 #Puerto y Direccion IP del servidor 
-server=('127.0.0.1',65432)
+server=('157.253.220.113',65432)
 
 #Crear un socket UDP
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -14,13 +15,13 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 def solicitud(client_id,fileName):
 
     #Enviar un mensaje al servidor del archivo a solicitar
-            #fileName =input("Ingrese nombre del archivo ('archivo_100MB' o 'archivo_250MB') ")
     client_socket.sendto(fileName.encode('utf-8'), server)
 
 
     inicio_transferencia = datetime.datetime.now()
+
     # Recibir los fragmentos del archivo del servidor y guardarlos en un archivo local
-    with open('Archivosrecibidos', 'wb') as f:
+    with open('ArchivosRecibidos', 'wb') as f:
         while True:
             fragmento, direccion_servidor = client_socket.recvfrom(bufferSize)
             if not fragmento:
@@ -34,8 +35,8 @@ def solicitud(client_id,fileName):
     tiempo = fin_transferencia - inicio_transferencia
 
     # Obtener información del archivo recibido
-    nombre_archivo = os.path.basename('Archivosrecibidos')
-    tamaño_Archivo = os.path.getsize('Archivosrecibidos')
+    nombre_archivo = os.path.basename('ArchivosRecibidos')
+    tamaño_Archivo = os.path.getsize('ArchivosRecibidos')
 
 
     # Escribir registro en un archivo de registro
@@ -47,7 +48,7 @@ def solicitud(client_id,fileName):
 numero_clientes = int(input("Ingrese el número de clientes para la prueba: "))
 
 # Nombre archivo a probar
-nombre_archivo_carga = input(input("Ingrese el nombre del archivo : "))
+nombre_archivo_carga = input("Ingrese el nombre del archivo : ")
 
 
 threads = []
