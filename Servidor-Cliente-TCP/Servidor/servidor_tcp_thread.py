@@ -11,7 +11,7 @@ thread_lock = Lock()
 # Create a server TCP socket and allow address re-use
 s = socket(AF_INET, SOCK_STREAM)
 s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-s.bind(('127.0.0.1', 65432))
+s.bind(('192.168.1.29', 65432))
 
 # Create a list in which threads will be stored in order to be joined later
 threads = []
