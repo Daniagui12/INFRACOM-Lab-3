@@ -8,12 +8,13 @@ from queue import Queue
 num_clients = 25
 
 class ClientThread:
-    def __init__(self, id, address, port, log_filename):
+    def __init__(self, id, address, port, log_filename, file_number):
         self.id = id
         self.address = address
         self.port = port
         self.s = socket(AF_INET, SOCK_STREAM)
         self.log_filename = log_filename
+        self.file_number = file_number
 
 
     def run(self):
@@ -25,22 +26,30 @@ class ClientThread:
             self.s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
             # Connect to the ip over the given port
             self.s.connect((self.address, self.port))
+            # Send the file size we want
+            self.s.send(file_num.encode())
+
+            response_server = self.s.recv(1024).decode()
             # Send the defined request message
             message = "Ready"
 
-            self.s.send(message.encode())
+            if response_server == "ok":
+                self.s.send(message.encode())
 
-            # Receive the file hash
-            file_hash = self.s.recv(1024).decode()
-            print(f'Hash received from server for client {self.id}: {file_hash}')
+                # Receive the file hash
+                file_hash = self.s.recv(1024).decode()
+                print(f'Hash received from server for client {self.id}: {file_hash}')
 
-            # Receive the file size
-            file_size = int(self.s.recv(1024).decode())
-            print(f"File size received from server for client {self.id}: {file_size} bytes")
+                # Receive the file size
+                file_size = int(self.s.recv(1024).decode())
+                print(f"File size received from server for client {self.id}: {file_size} bytes")
 
-            self.receive_file(file_size, file_hash, num_clients)
+                self.receive_file(file_size, file_hash, num_clients)
+                
+                self.s.close()
             
-            self.s.close()
+            else:
+                self.s.close()
             
         except error as e:
             print(e)
@@ -57,7 +66,7 @@ class ClientThread:
             start_time = datetime.datetime.now()
             remaining_bytes = file_size
             while remaining_bytes > 0:
-                chunk_size = min(4096, remaining_bytes)
+                chunk_size = min(1024, remaining_bytes)
                 data = self.s.recv(chunk_size)
                 #print(f"Received {len(data)} bytes from server for client {client_id}.")
                 f.write(data)
@@ -83,13 +92,13 @@ class ClientThread:
 # Create a queue to hold the tasks for the worker threads
 q = Queue(maxsize=0)
 
-
+file_num = input("Enter the file number to send (1 for 100MB or 2 for 250MB): ")
 # Function which generates a Client instance, getting the work item to be processed from the queue
 def worker():
     while True:
         try:
             item = q.get()
-            client = ClientThread(item, "127.0.0.1", 65432, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt")
+            client = ClientThread(item, "127.0.0.1", 65432, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt", file_num)
             client.run()
         except Exception as e:
             logging.exception(f"Exception in worker: {e}")
