@@ -1,8 +1,42 @@
+import os
 import socket
 
 server_address = ('localhost', 8000)
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_socket.bind(server_address)
+BUFF_SIZE = 65507
+
+def send_file_udp(id, file_size, client_address):
+    # Send the file size we want to the server with a sequence number
+    sequence_number = 0
+    if file_size == 1:
+        file_name = "100MB.bin"
+        file_size = os.path.getsize(f"files/{file_name}")
+    else:
+        file_name = "250MB.bin"
+        file_size = os.path.getsize(f"files/{file_name}")
+
+    while True:
+        sequence_number += 1
+        data = f"{sequence_number}:{file_size}:{id}"
+        server_socket.sendto(data.encode(), client_address)
+        print(f"Sent packet {file_size} to client at {client_address} with client id {id}")
+        break
+
+    # Send the file contents
+    with open(f"files/{file_name}", "rb") as f:
+        while True:
+            data = f.read(BUFF_SIZE)
+            if not data:
+                break
+            server_socket.sendto(data, client_address)
+            print(f"Sent {len(data)} bytes to client at {client_address} with client id {id}")
+        
+        # Send an empty packet to signal the end of the file
+        server_socket.sendto(b'', client_address)
+        print(f"Sent end of file to client at {client_address} with client id {id}")
+
+
 
 while True:
     # Create a dictionary to store received packets
@@ -15,25 +49,22 @@ while True:
 
         # Extract the client id and sequence number from the packet
         parts = packet.decode().split(':', 2)
-        print(parts)
         if len(parts) == 3:
             client_id = int(parts[2])
             sequence_number = int(parts[0])
             message = parts[1]
             print(f"Received packet {sequence_number} from client {client_id} at {client_address}: {message}")
         else:
-            print(f"Received invalid packet from {client_address}: {packet.decode()}")
+            print(f"Received invalid packet from {client_address} with client id {client_id}: {packet.decode()}")
             continue
 
         # Store the packet in the dictionary
         received_packets[sequence_number] = message
 
-        # Send an acknowledgement for this packet
-        server_socket.sendto(f"ACK:{sequence_number}:{client_id}".encode(), client_address)
+        # # Send an acknowledgement for this packet
+        # server_socket.sendto(f"ACK:{sequence_number}:{client_id}".encode(), client_address)
 
-        # Check if we have received all packets
-        if len(received_packets) == 10:
-            # Reassemble the packets in order and print the result
-            message = ''.join(received_packets[i] for i in range(1, 11))
-            print(f"Received message from client {client_id} at {client_address}: {message}")
+        # Send the file
+        if message == "1" or message == "2":
+            send_file_udp(client_id, int(message), client_address)
             break
