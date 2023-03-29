@@ -1,25 +1,35 @@
+import datetime
 import socket
 import threading
 import time
 BUFF_SIZE = 65507
+log_filename = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt"
 
 def receive_file(client_socket, file_size, client_id, num_clients):
-
     file_name = f"ArchivosRecibidos/Cliente{client_id+1}-Prueba-{num_clients}.txt"
     # Reescribimos el archivo en un archivo con el nombre "Cliente"
+    check_sum = 0
     with open(file_name, 'wb') as f:
         start_time = time.monotonic()
         while file_size > 0:
             data, _ = client_socket.recvfrom(BUFF_SIZE)
             # Revisamos el fin del archivo
-            if data == b'':
+            if len(data) == 0:
                 break
             f.write(data)
             file_size -= len(data)
+            check_sum += len(data)
         end_time = time.monotonic()
+        # Calcular el tiempo total de recepción
+        tiempo_total = end_time - start_time
+        with open(f"Logs/{log_filename}", 'a') as log_file:
+            log_file.write(f"Client {client_id+1}: file=Cliente{client_id+1}-Prueba-{num_clients}.txt, size={file_size}, status=SUCCESS, time={tiempo_total} seconds\n")
+
     
-    # Calcular el tiempo total de recepción
-    tiempo_total = end_time - start_time
+    if check_sum == file_size:
+        data, _ = client_socket.recvfrom()
+    
+
     print(f"Received file from server for client {client_id} in {tiempo_total} seconds.")
 
 def send_message(id, host, port, message, num_clients):
