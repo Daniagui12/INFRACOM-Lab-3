@@ -38,35 +38,36 @@ class RequestHandler(Thread):
         self.file_num = 0
         self.msg = ""
 
-        # Define the actions the thread will execute when called.
     def run(self):
 
         global logger
-        # Get the message from the client
-        print(f"Message received from client {self.addr}: {self.msg}")
-        logger.info(f"Message received from client {self.addr}: {self.msg}")
 
         # Get the ID of the client
         id_bytes = self.s.recv(4)
         client_id = struct.unpack('>i', id_bytes)[0]
-        print(f"Client ID received from client {self.addr}: {client_id}")
+        print(f"Client ID received from client {client_id}")
 
         file_name_msg = int(self.s.recv(1024).decode())
 
         if file_name_msg == 1:
             self.file_num = 1
+            logger.info(f"Client {client_id} requested 100MB.bin")
         
         elif file_name_msg == 2:
             self.file_num = 2
+            logger.info(f"Client {client_id} requested 250MB.bin")
         
         self.s.send("ok".encode())
+        logger.info(f"Sending 'ok' to client {client_id}")
         
         self.msg = self.s.recv(1024).decode()
 
         if self.msg == "Ready":
             self.send_file(logger, client_id)
+            logger.info(f"Client {client_id} is ready to receive the file")
         else: 
             print("Message not recognized")
+            logger.info(f"Message not recognized from client {client_id}")
 
         
         # Close the connection
@@ -82,6 +83,7 @@ class RequestHandler(Thread):
             file_name = "files/250MB.bin"
 
         file_hash = hashlib.md5(open(file_name, 'rb').read()).hexdigest()
+        logger.info(f"File hash calculated for client {client_id} : {file_hash}")
 
         # Pad the file hash with null bytes to ensure it is exactly 1024 bytes
         file_hash_padded = file_hash.ljust(1024, '\x00')
@@ -103,18 +105,24 @@ class RequestHandler(Thread):
                 data = f.read(1024)
                 self.s.send(data)
                 remaining_bytes -= 1024
-            end_time = datetime.datetime.now()
-            print(f"File sent to client {client_id} in {end_time - start_time}")
-            # Log the time it took to send the file and size of the file and client address
-            logger.info(f"File sent to client {client_id} in {end_time - start_time} with size {file_size}")
+            
+            # Get eof message from client
+            eof_msg = self.s.recv(1024).decode()
+            if eof_msg == "EOF":
+                end_time = datetime.datetime.now()
+                print(f"File sent to client {client_id} in {end_time - start_time}")
+                # Log the time it took to send the file
+                logger.info(f"File succesfuly sent to client {client_id} in {end_time - start_time} with size {file_size} bytes")
+            else:
+                end_time = datetime.datetime.now()
+                print(f"File not sent to client {client_id} in {end_time - start_time}")
+                # Log the time it took to send the file
+                logger.info(f"File not succesfuly sent to client {client_id} in {end_time - start_time} with size {file_size} bytes")
 
 
 print("Starting server")
-# Continuously listen for a client request and spawn a new thread to handle every request
 while True:
-
     try:
-
         print("Waiting for a client request")
         # Listen for a request
         s.listen()
@@ -130,6 +138,5 @@ while True:
         print ("\nExiting Server\n")
         break
 
-# When server ends gracefully (through user keyboard interrupt), wait until remaining threads finish
 for item in threads:
     item.join()

@@ -82,6 +82,9 @@ class ClientThread:
             time_diff = end_time - start_time
             print(f"Received {file_size} bytes from server for client {client_id} in {time_diff.total_seconds()} seconds.")
 
+            # Send EOF message to server
+            self.s.send("EOF".encode())
+
         # Calculate the hash of the received file
         calculated_hash = hashlib.md5(open(file_name, 'rb').read()).hexdigest()
         print(f"Hash of received file for client {client_id}: {calculated_hash}")
@@ -120,16 +123,9 @@ def worker():
         finally:
             q.task_done()
 
-#--------------------------------------------------#
-########## INITIATE CLIENT WORKER THREADS ##########
-#--------------------------------------------------#
-
-# Populate the work queue with a list of numbers as long as the total number of requests wished to be sent.
-# These queue items can be thought of as decrementing counters for the client thread workers.
 for item in range(num_clients):
     q.put(item)
 
-# Create a number of threads, given by the maxWorkerThread variable, to initiate clients and begin sending requests.
 for i in range(num_clients):
     t = Thread(target=worker)
     t.daemon = True
