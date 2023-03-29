@@ -7,6 +7,7 @@ log_filename = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt
 
 def receive_file(client_socket, file_size, client_id, num_clients):
     file_name = f"ArchivosRecibidos/Cliente{client_id+1}-Prueba-{num_clients}.txt"
+    file_size2 = file_size
     # Reescribimos el archivo en un archivo con el nombre "Cliente"
     check_sum = 0
     with open(file_name, 'wb') as f:
@@ -23,7 +24,7 @@ def receive_file(client_socket, file_size, client_id, num_clients):
         # Calcular el tiempo total de recepción
         tiempo_total = end_time - start_time
         with open(f"Logs/{log_filename}", 'a') as log_file:
-            log_file.write(f"Client {client_id+1}: file=Cliente{client_id+1}-Prueba-{num_clients}.txt, size={file_size}, status=SUCCESS, time={tiempo_total} seconds\n")
+            log_file.write(f"Client {client_id+1}: file=Cliente{client_id+1}-Prueba-{num_clients}.txt, size={file_size2}, status=SUCCESS, time={tiempo_total} seconds\n")
 
     
     if check_sum == file_size:
