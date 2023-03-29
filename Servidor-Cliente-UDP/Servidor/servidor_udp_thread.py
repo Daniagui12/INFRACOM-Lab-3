@@ -46,9 +46,9 @@ def send_file_udp(id, file_size, client_address):
             if not data:
                 break
             server_socket.sendto(data, client_address)
-            print(f"Sent {len(data)} bytes to client at {client_address} with client id {id}")
             bytes_sent += len(data)
         end = time.monotonic()
+        print(f"Sent file {file_name} of {file_size} bytes to client {id} at {client_address} and sent {bytes_sent} bytes in total.")
 
     # Log the time it took to send the file
     total = end - start
