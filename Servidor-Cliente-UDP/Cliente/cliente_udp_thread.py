@@ -20,7 +20,7 @@ def receive_file(client_socket, file_size, client_id, num_clients):
     
     # Calcular el tiempo total de recepción
     tiempo_total = end_time - start_time
-    print(f"Tiempo total de recepción: {tiempo_total}")
+    print(f"Received file from server for client {client_id} in {tiempo_total} seconds.")
 
 def send_message(id, host, port, message, num_clients):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
