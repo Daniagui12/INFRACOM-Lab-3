@@ -12,7 +12,7 @@ thread_lock = Lock()
 # Create a server TCP socket and allow address re-use
 s = socket(AF_INET, SOCK_STREAM)
 s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-s.bind(('192.168.1.29', 5000))
+s.bind(('127.0.0.1', 5000))
 
 # Create a list in which threads will be stored in order to be joined later
 threads = []
@@ -78,8 +78,11 @@ class RequestHandler(Thread):
 
         file_hash = hashlib.md5(open(file_name, 'rb').read()).hexdigest()
 
-        # Send the file hash
-        self.s.send(file_hash.encode())
+        # Pad the file hash with null bytes to ensure it is exactly 1024 bytes
+        file_hash_padded = file_hash.ljust(1024, '\x00')
+
+        # Send the padded file hash
+        self.s.send(file_hash_padded.encode())
 
         # Send the file size
         file_size = os.path.getsize(file_name)
