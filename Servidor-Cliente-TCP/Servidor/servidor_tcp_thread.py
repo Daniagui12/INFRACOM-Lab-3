@@ -46,6 +46,11 @@ class RequestHandler(Thread):
         print(f"Message received from client {self.addr}: {self.msg}")
         logger.info(f"Message received from client {self.addr}: {self.msg}")
 
+        # Get the ID of the client
+        id_bytes = self.s.recv(4)
+        client_id = struct.unpack('>i', id_bytes)[0]
+        print(f"Client ID received from client {self.addr}: {client_id}")
+
         file_name_msg = int(self.s.recv(1024).decode())
 
         if file_name_msg == 1:
@@ -59,7 +64,7 @@ class RequestHandler(Thread):
         self.msg = self.s.recv(1024).decode()
 
         if self.msg == "Ready":
-            self.send_file(logger)
+            self.send_file(logger, client_id)
         else: 
             print("Message not recognized")
 
@@ -68,7 +73,7 @@ class RequestHandler(Thread):
         self.s.close()
 
 
-    def send_file(self, logger):
+    def send_file(self, logger, client_id):
         
         if self.file_num == 1:
             file_name = "files/100MB.bin"
@@ -86,7 +91,7 @@ class RequestHandler(Thread):
 
         # Send the file size
         file_size = os.path.getsize(file_name)
-        print(f"Sending file size to client {file_size}")
+        print(f"Sending file size to client {client_id} : {file_size}")
         self.s.send(struct.pack("!Q", file_size))
 
         # Send the file
@@ -99,9 +104,9 @@ class RequestHandler(Thread):
                 self.s.send(data)
                 remaining_bytes -= 1024
             end_time = datetime.datetime.now()
-            print(f"File sent to client {self.addr} in {end_time - start_time}")
+            print(f"File sent to client {client_id} in {end_time - start_time}")
             # Log the time it took to send the file and size of the file and client address
-            logger.info(f"File sent to client {self.addr} in {end_time - start_time} with size {file_size}")
+            logger.info(f"File sent to client {client_id} in {end_time - start_time} with size {file_size}")
 
 
 print("Starting server")

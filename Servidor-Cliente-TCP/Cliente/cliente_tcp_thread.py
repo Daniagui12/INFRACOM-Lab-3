@@ -19,12 +19,16 @@ class ClientThread:
     def run(self):
         global num_clients
         try:
-            # Timeout if the no connection can be made in 5 seconds
-            self.s.settimeout(15)
             # Allow socket address reuse
             self.s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
             # Connect to the ip over the given port
             self.s.connect((self.address, self.port))
+
+            # Pack the integer into a bytes object using big-endian byte order
+            id_bytes = struct.pack('>i', self.id)
+            # Send the bytes object over the socket
+            self.s.send(id_bytes)
+
             # Send the file size we want
             self.s.send(file_num.encode())
 
@@ -97,6 +101,12 @@ q = Queue(maxsize=0)
 
 print("--Client app started--")
 num_clients = int(input("Enter the number of clients to request to the server (MAX = 25): "))
+
+# End the program if the number of clients is greater than 25
+if num_clients > 25:
+    print("The maximum number of clients is 25.")
+    exit()
+
 file_num = input("Enter the file number to send (1 for 100MB or 2 for 250MB): ")
 # Function which generates a Client instance, getting the work item to be processed from the queue
 def worker():
