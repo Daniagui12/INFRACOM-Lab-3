@@ -58,22 +58,26 @@ def send_message(id, host, port, message, num_clients):
 
     client_socket.close()
 
+try:
+    if __name__ == '__main__':
+        host = 'localhost'
+        port = 8000
+        file_num = input("Enter the file number to send (1 for 100MB or 2 for 250MB): ")
+        num_clients = int(input("Enter the number of clients to send the file to (Max 25): "))
 
-if __name__ == '__main__':
-    host = 'localhost'
-    port = 8000
-    file_num = input("Enter the file number to send (1 for 100MB or 2 for 250MB): ")
-    num_clients = int(input("Enter the number of clients to send the file to (Max 25): "))
+        if file_num != '1' and file_num != '2':
+            print("Invalid file number")
+            exit()
 
-    if file_num != '1' and file_num != '2':
-        print("Invalid file number")
-        exit()
+        if num_clients > 25:
+            print("Max number of clients is 25")
+            exit()
 
-    if num_clients > 25:
-        print("Max number of clients is 25")
-        exit()
+        # create 10 threads and send messages concurrently
+        for i in range(num_clients):
+            thread = threading.Thread(target=send_message, args=(i, host, port, file_num, num_clients))
+            thread.start()
 
-    # create 10 threads and send messages concurrently
-    for i in range(num_clients):
-        thread = threading.Thread(target=send_message, args=(i, host, port, file_num, num_clients))
-        thread.start()
+except KeyboardInterrupt:
+    print("Keyboard interrupt")
+    exit()

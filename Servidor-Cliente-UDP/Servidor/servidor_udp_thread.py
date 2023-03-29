@@ -59,34 +59,40 @@ def send_file_udp(id, file_size, client_address):
     print(f"Sent end of file to client at {client_address} with client id {id}")
         
 
-
-while True:
-    # Create a dictionary to store received packets
-    received_packets = {}
-    client_id = None
-
+try:
+    print("Server is listening on port 8000")
+    print("Waiting for client to connect...")
     while True:
-        # Receive a packet from the client
-        packet, client_address = server_socket.recvfrom(1024)
+        # Create a dictionary to store received packets
+        received_packets = {}
+        client_id = None
 
-        # Extract the client id and sequence number from the packet
-        parts = packet.decode().split(':', 2)
-        if len(parts) == 3:
-            client_id = int(parts[2])
-            sequence_number = int(parts[0])
-            message = parts[1]
-            print(f"Received packet {sequence_number} from client {client_id} at {client_address}: {message}")
-        else:
-            print(f"Received invalid packet from {client_address} with client id {client_id}: {packet.decode()}")
-            continue
+        while True:
+            # Receive a packet from the client
+            packet, client_address = server_socket.recvfrom(1024)
 
-        # Store the packet in the dictionary
-        received_packets[sequence_number] = message
+            # Extract the client id and sequence number from the packet
+            parts = packet.decode().split(':', 2)
+            if len(parts) == 3:
+                client_id = int(parts[2])
+                sequence_number = int(parts[0])
+                message = parts[1]
+                print(f"Received packet {sequence_number} from client {client_id} at {client_address}: {message}")
+            else:
+                print(f"Received invalid packet from {client_address} with client id {client_id}: {packet.decode()}")
+                continue
 
-        # # Send an acknowledgement for this packet
-        # server_socket.sendto(f"ACK:{sequence_number}:{client_id}".encode(), client_address)
+            # Store the packet in the dictionary
+            received_packets[sequence_number] = message
 
-        # Send the file
-        if message == "1" or message == "2":
-            send_file_udp(client_id, int(message), client_address)
-            break
+            # # Send an acknowledgement for this packet
+            # server_socket.sendto(f"ACK:{sequence_number}:{client_id}".encode(), client_address)
+
+            # Send the file
+            if message == "1" or message == "2":
+                send_file_udp(client_id, int(message), client_address)
+                break
+
+except KeyboardInterrupt:
+    print("Server shutting down...")
+    server_socket.close()
