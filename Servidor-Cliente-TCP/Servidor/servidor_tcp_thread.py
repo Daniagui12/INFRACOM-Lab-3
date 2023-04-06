@@ -110,14 +110,16 @@ class RequestHandler(Thread):
             eof_msg = self.s.recv(1024).decode()
             if eof_msg == "EOF":
                 end_time = datetime.datetime.now()
-                print(f"Archivo enviado al cliente {client_id} en {end_time - start_time} segundos")
+                total_sec = end_time - start_time
+                print(f"Archivo enviado al cliente {client_id} en {total_sec.total_seconds()} segundos")
                 # Log the time it took to send the file
-                logger.info(f"Archivo enviado satisfactoriamente al cliente {client_id} en {end_time - start_time} segundos con el tamanio {file_size} bytes")
+                logger.info(f"Archivo enviado satisfactoriamente al cliente {client_id} en {total_sec.total_seconds()} segundos con el tamanio {file_size} bytes")
             else:
                 end_time = datetime.datetime.now()
-                print(f"Archivo no enviado correctamente al cliente {client_id} en {end_time - start_time}")
+                total_sec = end_time - start_time
+                print(f"Archivo no enviado correctamente al cliente {client_id} en {total_sec.total_seconds()}")
                 # Log the time it took to send the file
-                logger.info(f"Archivo no enviado correctamente al cliente {client_id} en {end_time - start_time} segundos con el tamanio {file_size} bytes")
+                logger.info(f"Archivo no enviado correctamente al cliente {client_id} en {total_sec.total_seconds()} segundos con el tamanio {file_size} bytes")
 
 
 print("Iniciando el servidor")
