@@ -45,29 +45,29 @@ class RequestHandler(Thread):
         # Get the ID of the client
         id_bytes = self.s.recv(4)
         client_id = struct.unpack('>i', id_bytes)[0]
-        print(f"Client ID received from client {client_id}")
+        print(f"Client ID recibido por parte del cliente {client_id}")
 
         file_name_msg = int(self.s.recv(1024).decode())
 
         if file_name_msg == 1:
             self.file_num = 1
-            logger.info(f"Client {client_id} requested 100MB.bin")
+            logger.info(f"Cliente {client_id} solicito 100MB.bin")
         
         elif file_name_msg == 2:
             self.file_num = 2
-            logger.info(f"Client {client_id} requested 250MB.bin")
+            logger.info(f"Cliente {client_id} solicito 250MB.bin")
         
         self.s.send("ok".encode())
-        logger.info(f"Sending 'ok' to client {client_id}")
+        logger.info(f"Enviando 'ok' al cliente {client_id}")
         
         self.msg = self.s.recv(1024).decode()
 
         if self.msg == "Ready":
             self.send_file(logger, client_id)
-            logger.info(f"Client {client_id} is ready to receive the file")
+            logger.info(f"Cliente {client_id} esta listo para recibir el archivo")
         else: 
-            print("Message not recognized")
-            logger.info(f"Message not recognized from client {client_id}")
+            print("Mensaje no reconocido")
+            logger.info(f"Mensaje no reconocido por parte del cliente {client_id}")
 
         
         # Close the connection
@@ -83,7 +83,7 @@ class RequestHandler(Thread):
             file_name = "files/250MB.bin"
 
         file_hash = hashlib.md5(open(file_name, 'rb').read()).hexdigest()
-        logger.info(f"File hash calculated for client {client_id} : {file_hash}")
+        logger.info(f"Hash del archivo calculado para el cliente {client_id} : {file_hash}")
 
         # Pad the file hash with null bytes to ensure it is exactly 1024 bytes
         file_hash_padded = file_hash.ljust(1024, '\x00')
@@ -93,7 +93,7 @@ class RequestHandler(Thread):
 
         # Send the file size
         file_size = os.path.getsize(file_name)
-        print(f"Sending file size to client {client_id} : {file_size}")
+        print(f"Enviando tamanio del archivo al cliente {client_id} : {file_size}")
         self.s.send(struct.pack("!Q", file_size))
 
         # Send the file
@@ -110,20 +110,20 @@ class RequestHandler(Thread):
             eof_msg = self.s.recv(1024).decode()
             if eof_msg == "EOF":
                 end_time = datetime.datetime.now()
-                print(f"File sent to client {client_id} in {end_time - start_time}")
+                print(f"Archivo enviado al cliente {client_id} en {end_time - start_time} segundos")
                 # Log the time it took to send the file
-                logger.info(f"File succesfuly sent to client {client_id} in {end_time - start_time} with size {file_size} bytes")
+                logger.info(f"Archivo enviado satisfactoriamente al cliente {client_id} en {end_time - start_time} segundos con el tamanio {file_size} bytes")
             else:
                 end_time = datetime.datetime.now()
-                print(f"File not sent to client {client_id} in {end_time - start_time}")
+                print(f"Archivo no enviado correctamente al cliente {client_id} en {end_time - start_time}")
                 # Log the time it took to send the file
-                logger.info(f"File not succesfuly sent to client {client_id} in {end_time - start_time} with size {file_size} bytes")
+                logger.info(f"Archivo no enviado correctamente al cliente {client_id} en {end_time - start_time} segundos con el tamanio {file_size} bytes")
 
 
-print("Starting server")
+print("Iniciando el servidor")
 while True:
     try:
-        print("Waiting for a client request")
+        print("Esperando por solicitudes...")
         # Listen for a request
         s.listen()
         # Accept the request
