@@ -6,8 +6,9 @@ import struct
 import time
 from socket import SO_REUSEADDR, SOCK_DGRAM, SOCK_STREAM, error, socket, SOL_SOCKET, AF_INET
 
-server_address_tcp = ('localhost', 5000)
-server_address_udp = ('localhost', 8000)
+host = 'localhost'
+server_address_tcp = (host, 5000)
+server_address_udp = (host, 8000)
 server_socket = socket(AF_INET, SOCK_DGRAM)
 server_socket.bind(server_address_udp)
 BUFF_SIZE = 65507
