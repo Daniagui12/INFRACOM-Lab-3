@@ -40,7 +40,7 @@ def send_file_udp(id, file_size, client_address, sock):
     while True:
         data = f"{file_size}:{id}"
         sock.send(data.encode())
-        print(f"Sent packet {file_size} to client at {client_address} with client id {id}")
+        print(f"Paquete enviado {file_size} al cliente con la direccion {client_address} con cliente id {id}")
         break
 
     port_bytes = sock.recv(4)
@@ -58,22 +58,21 @@ def send_file_udp(id, file_size, client_address, sock):
             server_socket.sendto(data, client_address)
             bytes_sent += len(data)
         end = time.monotonic()
-        print(f"Sent file {file_name} of {file_size} bytes to client {id} at {client_address} and sent {bytes_sent} bytes in total.")
+        print(f"Archivo enviado {file_name} de {file_size} bytes al cliente {id} con direccion {client_address} y enviados {bytes_sent} bytes en total.")
 
     # Log the time it took to send the file
     total = end - start
         
-    logger.info(f"Sent file {file_name} of {file_size} bytes to client {id} at {client_address} and sent {bytes_sent} bytes in total. Took {total} seconds to send the file.")
+    logger.info(f"Archivo enviado {file_name} de {file_size} bytes al cliente {id} con direccion {client_address} y enviados {bytes_sent} bytes en total. Tomo {total} segundos en enviar el archivo.")
     # Send an empty packet to signal the end of the file
     server_socket.sendto(b'', client_address)
-    print(f"Sent end of file to client at {client_address} with client id {id}")
+    print(f"Enviada la terminacion del archivo al cliente con direecion {client_address} y cliente id {id}")
         
 
 try:
-    print("Server is listening on port 8000 and TCP on port 5000...")
-    print("Waiting for client to connect...")
+    print("Servidor escuchando en el puerto 8000 y TCP en el puerto 5000...")
+    print("Esperando peticiones de los clientes...")
     while True:
-        # Create a dictionary to store received packets
         client_id = None
 
         while True:
@@ -89,13 +88,10 @@ try:
             if len(parts) == 2:
                 client_id = int(parts[1])
                 message = parts[0]
-                print(f"Received packet from client {client_id} at {client_address}: {message}")
+                print(f"Recibidos paquetes del cliente {client_id} con direccion {client_address}: {message}")
             else:
-                print(f"Received invalid packet from {client_address} with client id {client_id}: {packet.decode()}")
+                print(f"Recibido paquete invalido de direccion {client_address} con cliente id {client_id}: {packet.decode()}")
                 continue
-
-            # # Send an acknowledgement for this packet
-            # server_socket.sendto(f"ACK:{sequence_number}:{client_id}".encode(), client_address)
 
             # Send the file
             if message == "1" or message == "2":
