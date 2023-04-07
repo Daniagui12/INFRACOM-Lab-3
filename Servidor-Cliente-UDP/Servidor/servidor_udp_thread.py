@@ -66,7 +66,7 @@ def send_file_udp(id, file_size, client_address, sock):
     logger.info(f"Archivo enviado {file_name} de {file_size} bytes al cliente {id} con direccion {client_address} y enviados {bytes_sent} bytes en total. Tomo {total} segundos en enviar el archivo.")
     # Send an empty packet to signal the end of the file
     server_socket.sendto(b'', client_address)
-    print(f"Enviada la terminacion del archivo al cliente con direecion {client_address} y cliente id {id}")
+    print(f"Enviada la terminacion del archivo al cliente con direccion {client_address} y cliente id {id}")
         
 
 try:
