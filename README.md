@@ -8,13 +8,13 @@
 
 ### Requisitos
 
-* Instalar python 3.8, para esto usamos el siguiente comando:
+Instalar python 3.8, para esto usamos el siguiente comando:
 
 ```bash
 $ apt install python3.8 -y
 ```
 
-* Instalar la siguiente libreria para la descarga de archivos subidos en Google Drive para las pruebas de los servidores
+Instalar la siguiente libreria para la descarga de archivos subidos en Google Drive para las pruebas de los servidores
 
 ```bash
 $ pip install gdown
@@ -22,28 +22,56 @@ $ pip install gdown
 
 ### Instalación
 
-* Antes de iniciar, es necesario ubicarnos en la carpeta del proyecto
+Antes de iniciar, es necesario ubicarnos en la carpeta del proyecto
 
 ```bash
 $ cd INFRACOM-Lab-3
 ```
 
-* Antes de la ejecución de cada servidor y cliente es necesario ejecutar el siguiente script que se encarga de descargar los archivos de una carpeta en drive
+Antes de la ejecución de cada servidor y cliente es necesario ejecutar el siguiente script que se encarga de descargar los archivos de una carpeta en drive
 
 ```bash
 $ python3.8 files/file_download.py
 ```
 
-* Guardar la ip asignada en la maquina virtual usando el comando ifconfig
-* Una vez con esta ip se deben modificar los archivos con el fin poner la ip privada de la maquina virtual
-* Archivo servidor_tcp_thread.py
+Guardar la ip asignada en la maquina virtual usando el comando ifconfig
+
+Una vez con esta ip se deben modificar los archivos con el fin poner la ip privada de la maquina virtual
+
+**Archivo servidor_tcp_thread.py**
 ```bash
 $ sudo nano Servidor-Cliente-TCP/Servidor/servidor_tcp_thread.py
 ```
-Modificamos la linea #15 agregando la IP de la maquina virtual.
+* Modificamos la linea #15 agregando la IP de la maquina virtual.
 
 ```bash
 s.bind(('IP MAQUINA', 5000))
+```
+
+**Archivo cliente_tcp_thread.py**
+* Este es posible modificarlo en cualquier editor de texto dado a que no se debe correr en la maquina virtual
+* Modificamos la linea #120 agregando la IP de la maquina virtual.
+
+```bash
+client = ClientThread(item, "IP MAQUINA", 5000, datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt", file_num)
+```
+
+**Archivo servidor_udp_thread.py**
+```bash
+$ sudo nano Servidor-Cliente-UDP/Servidor/servidor_udp_thread.py
+```
+* Modificamos la linea #9 agregando la IP de la maquina virtual.
+
+```bash
+host = 'IP MAQUINA'
+```
+
+**Archivo cliente_tcp_thread.py**
+* Este es posible modificarlo en cualquier editor de texto dado a que no se debe correr en la maquina virtual
+* Modificamos la linea #85 agregando la IP de la maquina virtual.
+
+```bash
+host = 'IP MAQUINA'
 ```
 
 ### Ejecución (TCP)
