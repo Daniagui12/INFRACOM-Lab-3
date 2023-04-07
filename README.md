@@ -6,11 +6,17 @@
 
 ### Requisitos
 
+* Instalar python 3.8, para esto usamos el siguiente comando:
+
 ```bash
 $ apt install python3.8 -y
 ```
 
+* Instalar la siguiente libreria para la descarga de archivos subidos en Google Drive para las pruebas de los servidores
+
 ```bash
+$ python3.8 pip install gdown
+```
 
 
 
