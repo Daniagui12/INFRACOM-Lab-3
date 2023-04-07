@@ -51,3 +51,21 @@ $ cd Servidor-Cliente-TCP/Cliente
 ```bash
 $ python3.8 Cliente/cliente_tcp_thread.py
 ```
+
+### Ejecución (UDP)
+
+* Para el servidor, se debe ejecutar este de la siguiente forma con el fin de no tener errores con los paths de los archivos usados, esto se hace desde la carpeta base del proyecto.
+
+```bash
+$ python3.8 Servidor-Cliente-UDP/Servidor/servidor_udp_thread.py
+```
+
+* Para el cliente, este si debe ejecutarse estando desde su carpeta, de esta forma es necesario ubicarse en esa carpeta primero y luego ejecutar el archivo.
+
+```bash
+$ cd Servidor-Cliente-UDP/Cliente
+```
+
+```bash
+$ python3.8 Cliente/cliente_udp_thread.py
+```
