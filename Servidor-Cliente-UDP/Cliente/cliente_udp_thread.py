@@ -27,7 +27,7 @@ def receive_file(client_socket, file_size, client_id, num_clients, host, port_ud
             f.write(data)
             file_size -= len(data)
             check_sum += len(data)
-            print(f"Received {len(data)} bytes from server for client {client_id}.")
+            print(f"Recibidos {len(data)} bytes del servidor para el cliente {client_id}.")
 
         end_time = time.monotonic()
         # Calcular el tiempo total de recepción
@@ -35,13 +35,13 @@ def receive_file(client_socket, file_size, client_id, num_clients, host, port_ud
 
         if check_sum == file_size2:
             with open(f"Logs/{log_filename}", 'a') as log_file:
-                log_file.write(f"Client {client_id+1}: file=Cliente{client_id+1}-Prueba-{num_clients}.txt, size={check_sum}, status=SUCCESS, time={tiempo_total} seconds\n")
+                log_file.write(f"Cliente {client_id+1}: Archivo=Cliente{client_id+1}-Prueba-{num_clients}.txt, tamanio_enviado={check_sum}, estado=SUCCESS, tiempo={tiempo_total} segundos\n")
         else: 
             with open(f"Logs/{log_filename}", 'a') as log_file:
-                log_file.write(f"Client {client_id+1}: file=Cliente{client_id+1}-Prueba-{num_clients}.txt, size={check_sum}, status=FAIL, time={tiempo_total} seconds\n")
+                log_file.write(f"Cliente {client_id+1}: Archivo=Cliente{client_id+1}-Prueba-{num_clients}.txt, tamanio_enviado={check_sum}, estado=FAIL, tiempo={tiempo_total} segundos\n")
     
 
-    print(f"Received file from server for client {client_id} in {tiempo_total} seconds.")
+    print(f"Archivo recibido del servidor por el cliente {client_id} en {tiempo_total} segundos.")
 
 def send_message(id, host, port, message, num_clients, port_udp):
     client_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -57,7 +57,7 @@ def send_message(id, host, port, message, num_clients, port_udp):
     while True:
         data = f"{message}:{id}"
         client_socket_tcp.send(data.encode())
-        print(f"Sent client id {id} and file size {message} to server at {host}:{port}")
+        print(f"Id del cliente enviado {id} y tamanio del archivo deseado {message} al servidor en {host}:{port}")
 
         # Receive the file
         # Extract the client id and sequence number from the packet
@@ -67,7 +67,7 @@ def send_message(id, host, port, message, num_clients, port_udp):
             client_id = int(parts[1])
             file_size = parts[0]
         
-        print(f"Received file size {file_size} from server for client {client_id}")
+        print(f"Recibido el tamanio del archivo {file_size} desde el servidor para el cliente {client_id}")
 
         port_client_udp = client_socket_udp.getsockname()[1]
 
@@ -85,15 +85,15 @@ try:
         host = 'localhost'
         port = 5000
         port_udp = 8000
-        file_num = input("Enter the file number to send (1 for 100MB or 2 for 250MB): ")
-        num_clients = int(input("Enter the number of clients to send the file to (Max 25): "))
+        file_num = input("Ingrese el numero del archivo que desea enviar (1 para 100MB o 2 para 250MB): ")
+        num_clients = int(input("Ingrese el numero de clientes que desea enviar el archivo (Max 25): "))
 
         if file_num != '1' and file_num != '2':
-            print("Invalid file number")
+            print("Numero de archivo invalido")
             exit()
 
         if num_clients > 25:
-            print("Max number of clients is 25")
+            print("El numero maximo de clientes es 25")
             exit()
 
         # create 10 threads and send messages concurrently
