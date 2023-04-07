@@ -34,6 +34,18 @@ $ cd INFRACOM-Lab-3
 $ python3.8 files/file_download.py
 ```
 
+* Guardar la ip asignada en la maquina virtual usando el comando ifconfig
+* Una vez con esta ip se deben modificar los archivos con el fin poner la ip privada de la maquina virtual
+* Archivo servidor_tcp_thread.py
+```bash
+$ sudo nano Servidor-Cliente-TCP/Servidor/servidor_tcp_thread.py
+```
+Modificamos la linea #15 agregando la IP de la maquina virtual.
+
+```bash
+s.bind(('IP MAQUINA', 5000))
+```
+
 ### Ejecución (TCP)
 
 * Para el servidor, se debe ejecutar este de la siguiente forma con el fin de no tener errores con los paths de los archivos usados, esto se hace desde la carpeta base del proyecto.
