@@ -51,7 +51,8 @@ def send_message(id, host, port, message, num_clients, port_udp):
     # Connect to the ip over the given port
     client_socket_tcp.connect((host, port))
 
-    client_socket_udp.bind((host, 0))
+    myprivateip = socket.gethostbyname(socket.gethostname())
+    client_socket_udp.bind((myprivateip, 0))
 
     # Send the file size we want to the server with a sequence number
     while True:
@@ -82,7 +83,7 @@ def send_message(id, host, port, message, num_clients, port_udp):
 
 try:
     if __name__ == '__main__':
-        host = 'localhost'
+        host = '192.168.1.11'
         port = 5000
         port_udp = 8000
         file_num = input("Ingrese el numero del archivo que desea enviar (1 para 100MB o 2 para 250MB): ")
