@@ -35,10 +35,10 @@ def receive_file(client_socket, file_size, client_id, num_clients, host, port_ud
 
         if check_sum == file_size2:
             with open(f"Logs/{log_filename}", 'a') as log_file:
-                log_file.write(f"Cliente {client_id+1}: Archivo=Cliente{client_id+1}-Prueba-{num_clients}.txt, tamanio_enviado={check_sum}, estado=SUCCESS, tiempo={tiempo_total} segundos, puerto={client_socket.getsockname()[1]}")
+                log_file.write(f"Cliente {client_id+1}: Archivo=Cliente{client_id+1}-Prueba-{num_clients}.txt, tamanio_enviado={check_sum}, estado=SUCCESS, tiempo={tiempo_total} segundos, puerto={client_socket.getsockname()[1]}\n")
         else: 
             with open(f"Logs/{log_filename}", 'a') as log_file:
-                log_file.write(f"Cliente {client_id+1}: Archivo=Cliente{client_id+1}-Prueba-{num_clients}.txt, tamanio_enviado={check_sum}, estado=FAIL, tiempo={tiempo_total} segundos, puerto={client_socket.getsockname()[1]}")
+                log_file.write(f"Cliente {client_id+1}: Archivo=Cliente{client_id+1}-Prueba-{num_clients}.txt, tamanio_enviado={check_sum}, estado=FAIL, tiempo={tiempo_total} segundos, puerto={client_socket.getsockname()[1]}\n")
     
 
     print(f"Archivo recibido del servidor por el cliente {client_id} en {tiempo_total} segundos.")
