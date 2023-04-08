@@ -59,10 +59,9 @@ def send_file_udp(id, file_size, client_address, sock):
             server_socket.sendto(data, client_address)
             bytes_sent += len(data)
         end = time.monotonic()
-        print(f"Archivo enviado {file_name} de {file_size} bytes al cliente {id} con direccion {client_address} y enviados {bytes_sent} bytes en total.")
-
-    # Log the time it took to send the file
-    total = end - start
+        # Log the time it took to send the file
+        total = end - start
+        print(f"Archivo enviado {file_name} de {file_size} bytes al cliente {id} con direccion {client_address} y enviados {bytes_sent} bytes en total. Tomo {total} segundos en enviar el archivo.")
         
     logger.info(f"Archivo enviado {file_name} de {file_size} bytes al cliente {id} con direccion {client_address} y enviados {bytes_sent} bytes en total. Tomo {total} segundos en enviar el archivo.")
     # Send an empty packet to signal the end of the file
