@@ -89,7 +89,7 @@ $ cd Servidor-Cliente-TCP/Cliente
 ```
 
 ```bash
-$ python3.8 Cliente/cliente_tcp_thread.py
+$ python3.8 cliente_tcp_thread.py
 ```
 
 ### Ejecución (UDP)
@@ -107,5 +107,5 @@ $ cd Servidor-Cliente-UDP/Cliente
 ```
 
 ```bash
-$ python3.8 Cliente/cliente_udp_thread.py
+$ python3.8 cliente_udp_thread.py
 ```
