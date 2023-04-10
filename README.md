@@ -109,3 +109,10 @@ $ cd Servidor-Cliente-UDP/Cliente
 ```bash
 $ python3.8 cliente_udp_thread.py
 ```
+
+### Aclaraciones
+En caso de que querer ejecutar cualquiera de los servidores y clientes de forma local, es posible cambiar las lineas mencionadas por "localhost". Adicionalmente, es necesario realizar un cambio extra en el CLIENTE UDP en la linea 55
+
+```bash
+client_socket_udp.bind(("localhost", 0))
+```
